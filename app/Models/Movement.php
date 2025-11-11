@@ -11,35 +11,56 @@ class Movement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'item_id','type','from_location_id','to_location_id','quantity','note'
+        'item_id', 'type', 'from_location_id', 'to_location_id', 'quantity', 'note'
     ];
 
-    public function item() { return $this->belongsTo(Item::class); }
-    public function fromLocation() { return $this->belongsTo(Location::class, 'from_location_id'); }
-    public function toLocation()   { return $this->belongsTo(Location::class, 'to_location_id'); }
+    // -----------------------
+    // Beziehungen
+    // -----------------------
+    public function item()
+    {
+        return $this->belongsTo(Item::class);
+    }
 
+    public function fromLocation()
+    {
+        return $this->belongsTo(Location::class, 'from_location_id');
+    }
+
+    public function toLocation()
+    {
+        return $this->belongsTo(Location::class, 'to_location_id');
+    }
+
+    // -----------------------
+    // Hooks
+    // -----------------------
     protected static function booted(): void
     {
+        // --- Validierung vor Erstellung ---
         static::creating(function (Movement $m) {
-            if (! in_array($m->type, ['in','out','transfer'], true)) {
+            // Typ prüfen
+            if (!in_array($m->type, ['in', 'out', 'transfer'], true)) {
                 throw ValidationException::withMessages(['type' => 'Ungültiger Bewegungstyp.']);
             }
+
+            // Menge prüfen
             if ($m->quantity < 1) {
                 throw ValidationException::withMessages(['quantity' => 'Menge muss > 0 sein.']);
             }
 
             // Struktur-Check
             $ok =
-                ($m->type === 'in'       && $m->to_location_id     && ! $m->from_location_id) ||
-                ($m->type === 'out'      && $m->from_location_id   && ! $m->to_location_id) ||
-                ($m->type === 'transfer' && $m->from_location_id   && $m->to_location_id && $m->from_location_id !== $m->to_location_id);
+                ($m->type === 'in'       && $m->to_location_id && !$m->from_location_id) ||
+                ($m->type === 'out'      && $m->from_location_id && !$m->to_location_id) ||
+                ($m->type === 'transfer' && $m->from_location_id && $m->to_location_id && $m->from_location_id !== $m->to_location_id);
 
-            if (! $ok) {
+            if (!$ok) {
                 throw ValidationException::withMessages(['type' => 'Kombination von Typ/Locations ungültig.']);
             }
 
-            // Negativbestände bei out/transfer (Quelle) verhindern
-            if (in_array($m->type, ['out','transfer'], true) && $m->from_location_id) {
+            // Negativbestand verhindern
+            if (in_array($m->type, ['out', 'transfer'], true) && $m->from_location_id) {
                 $current = $m->item->stockFor(Location::findOrFail($m->from_location_id));
                 if ($current - $m->quantity < 0) {
                     throw ValidationException::withMessages(['quantity' => 'Bestand reicht nicht aus.']);
@@ -47,28 +68,26 @@ class Movement extends Model
             }
         });
 
-        // Low-Stock-Mails können hier (created) ausgelöst werden, falls konfiguriert.
-        // Siehe deine bestehende Notification-Implementierung.
-        // 📬 Hier fügst du den Notification-Teil ein:
+        // --- Notifications nach Erstellung ---
         static::created(function (Movement $movement) {
             $item = $movement->item;
 
-            // LOW STOCK check
+            // Low-Stock prüfen
             if ($item->min_stock && $item->totalStock() < $item->min_stock) {
                 \Illuminate\Support\Facades\Notification::route('mail', env('LOW_STOCK_MAIL_TO'))
                     ->notify(new \App\Notifications\LowStockNotification($item));
             }
 
-            // TARGET STOCK check (für fertiges Produkt MD-001)
+            // Target-Stock für Fertigprodukt prüfen
             if ($item->sku === 'MD-001') {
-                $target = (int)(env('TARGET_STOCK', $item->target_stock ?? 0));
-                $total = $item->totalStock();
+                $target = (int)($item->target_stock ?? env('TARGET_STOCK', 0));
+                $total  = $item->totalStock();
 
-                if ($total >= $target && ! cache("target_notified_{$item->id}")) {
+                if ($total >= $target && !cache("target_notified_{$item->id}")) {
                     \Illuminate\Support\Facades\Notification::route('mail', env('TARGET_STOCK_MAIL_TO'))
                         ->notify(new \App\Notifications\TargetStockReachedNotification($item));
 
-                    // Zwischenspeichern, damit Mail nicht mehrfach kommt
+                    // Zwischenspeichern, um Mail nicht mehrfach zu senden
                     cache(["target_notified_{$item->id}" => true], now()->addHours(12));
                 }
 
@@ -78,7 +97,5 @@ class Movement extends Model
                 }
             }
         });
-
-
     }
 }

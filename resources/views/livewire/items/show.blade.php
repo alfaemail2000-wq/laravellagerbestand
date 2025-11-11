@@ -3,4 +3,6 @@
     <p><strong>SKU:</strong> {{ $item->sku }}</p>
     <p><strong>Mindestbestand:</strong> {{ $item->min_stock ?? '–' }}</p>
     <p><strong>Aktueller Bestand:</strong> {{ $item->totalStock() ?? 0 }}</p>
+
+    <p>Aktueller Bestand: {{ $item->stock }}</p> <!-- aktueller Bestand -->
 </div>

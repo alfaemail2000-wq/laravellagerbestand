@@ -18,6 +18,7 @@
                 <td class="border p-2">{{ $item->sku }}</td>
                 <td class="border p-2">{{ $item->name }}</td>
                 <td class="border p-2">{{ $item->min_stock ?? '–' }}</td>
+                <td>{{ $item->stock }}</td> <!-- Hier wird der aktuelle Bestand angezeigt -->
                 <td class="border p-2">
                     <a href="{{ route('items.show', $item) }}" class="text-blue-500 hover:underline">Details</a> |
                     <a href="{{ route('items.edit', $item) }}" class="text-yellow-600 hover:underline">Bearbeiten</a>

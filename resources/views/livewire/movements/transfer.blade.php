@@ -1,40 +1,81 @@
-<div class="p-6">
-    <h1 class="text-xl font-bold mb-4">Transfer zwischen Lagern</h1>
+<div>
+    <h2 class="text-xl font-bold mb-4">Transfer buchen</h2>
 
-    <form wire:submit.prevent="save" class="space-y-3">
-        <select wire:model="item_id" class="border p-2 w-full">
-            <option value="">Artikel wählen...</option>
-            @foreach ($items as $item)
-                <option value="{{ $item->id }}">{{ $item->name }}</option>
-            @endforeach
-        </select>
+    @if(session()->has('success'))
+        <div class="bg-green-200 text-green-800 p-2 mb-4 rounded">{{ session('success') }}</div>
+    @endif
 
-        <div class="grid grid-cols-2 gap-2">
-            <select wire:model="from_location_id" class="border p-2">
-                <option value="">Von Lager...</option>
-                @foreach ($locations as $loc)
-                    <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+    <form wire:submit.prevent="submit" class="mb-6 space-y-4">
+        <div>
+            <label>Artikel</label>
+            <select wire:model="item_id" class="border p-1 w-full">
+                <option value="">-- auswählen --</option>
+                @foreach($items as $item)
+                    <option value="{{ $item->id }}">{{ $item->name }} ({{ $item->sku }})</option>
                 @endforeach
             </select>
-
-            <select wire:model="to_location_id" class="border p-2">
-                <option value="">Nach Lager...</option>
-                @foreach ($locations as $loc)
-                    <option value="{{ $loc->id }}">{{ $loc->name }}</option>
-                @endforeach
-            </select>
+            @error('item_id') <span class="text-red-600">{{ $message }}</span> @enderror
         </div>
 
-        <input wire:model="quantity" placeholder="Menge" class="border p-2 w-full">
-        <input wire:model="note" placeholder="Notiz" class="border p-2 w-full">
-        <button class="bg-blue-600 text-white px-4 py-2 rounded">Buchen</button>
+        <div>
+            <label>Von Lager</label>
+            <select wire:model="from_location_id" class="border p-1 w-full">
+                <option value="">-- auswählen --</option>
+                @foreach($locations as $loc)
+                    <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                @endforeach
+            </select>
+            @error('from_location_id') <span class="text-red-600">{{ $message }}</span> @enderror
+        </div>
+
+        <div>
+            <label>Zu Lager</label>
+            <select wire:model="to_location_id" class="border p-1 w-full">
+                <option value="">-- auswählen --</option>
+                @foreach($locations as $loc)
+                    <option value="{{ $loc->id }}">{{ $loc->name }}</option>
+                @endforeach
+            </select>
+            @error('to_location_id') <span class="text-red-600">{{ $message }}</span> @enderror
+        </div>
+
+        <div>
+            <label>Menge</label>
+            <input type="number" wire:model="quantity" class="border p-1 w-full" min="1"/>
+            @error('quantity') <span class="text-red-600">{{ $message }}</span> @enderror
+        </div>
+
+        <div>
+            <label>Notiz</label>
+            <input type="text" wire:model="note" class="border p-1 w-full"/>
+        </div>
+
+        <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Transfer buchen</button>
     </form>
 
-    <h2 class="text-lg font-semibold mt-6">Letzte Transfers</h2>
-    <ul class="mt-2">
-        @foreach ($movements as $m)
-            <li>🔄 {{ $m->item->name }}: {{ $m->quantity }}
-                ({{ $m->fromLocation->name ?? '?' }} → {{ $m->toLocation->name ?? '?' }})</li>
+    <h3 class="text-lg font-semibold mb-2">Letzte Transfers</h3>
+    <table class="w-full border">
+        <thead>
+        <tr class="bg-gray-100">
+            <th class="border p-1">Artikel</th>
+            <th class="border p-1">Von Lager</th>
+            <th class="border p-1">Zu Lager</th>
+            <th class="border p-1">Menge</th>
+            <th class="border p-1">Notiz</th>
+            <th class="border p-1">Datum</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($movements as $m)
+            <tr>
+                <td class="border p-1">{{ $m->item->name }}</td>
+                <td class="border p-1">{{ $m->fromLocation->name }}</td>
+                <td class="border p-1">{{ $m->toLocation->name }}</td>
+                <td class="border p-1">{{ $m->quantity }}</td>
+                <td class="border p-1">{{ $m->note }}</td>
+                <td class="border p-1">{{ $m->created_at->format('d.m.Y H:i') }}</td>
+            </tr>
         @endforeach
-    </ul>
+        </tbody>
+    </table>
 </div>

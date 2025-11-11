@@ -2,41 +2,53 @@
 
 namespace App\Livewire\Movements;
 
+use Livewire\Component;
 use App\Models\Item;
 use App\Models\Location;
-use Livewire\Component;
+use Illuminate\Validation\ValidationException;
 
 class Production extends Component
 {
-    public $quantity = 1;
+    public $quantity;
     public $from_location_id;
     public $to_location_id;
 
+    public $product;
+    public $locations;
+
+    public function mount()
+    {
+        $this->product = Item::where('sku', 'FINISHED-MODULIX')->first();
+        $this->locations = Location::all();
+    }
+
     protected $rules = [
-        'quantity' => 'required|numeric|min:1',
+        'quantity' => 'required|integer|min:1',
         'from_location_id' => 'required|exists:locations,id',
-        'to_location_id' => 'required|exists:locations,id|different:from_location_id',
+        'to_location_id' => 'required|exists:locations,id',
     ];
 
-    public function save()
+    public function produce()
     {
         $this->validate();
 
-        // Beispiel: Fertigprodukt mit SKU = 'MODULIX'
-        $product = Item::where('sku', 'MODULIX')->firstOrFail();
-        $product->produce(
-            quantity: $this->quantity,
-            from: Location::findOrFail($this->from_location_id),
-            to: Location::findOrFail($this->to_location_id)
-        );
+        try {
+            $this->product->produce(
+                $this->quantity,
+                Location::findOrFail($this->from_location_id),
+                Location::findOrFail($this->to_location_id)
+            );
+        } catch (ValidationException $e) {
+            $this->addError('production', $e->getMessage());
+            return;
+        }
 
-        session()->flash('success', 'Produktion erfolgreich verbucht.');
+        session()->flash('success', 'Produktion erfolgreich gebucht.');
         $this->reset(['quantity']);
     }
 
     public function render()
     {
-        $locations = Location::all();
-        return view('livewire.movements.production', compact('locations'));
+        return view('livewire.movements.production');
     }
 }
