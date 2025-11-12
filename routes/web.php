@@ -47,15 +47,16 @@ Route::middleware(['auth'])->group(function () {
     // --------------------------------
     // 📦 Artikelverwaltung (ITEMS CRUD)
     // --------------------------------
-    Route::get('/items', ItemsIndex::class)->name('items.index');
-    Route::get('/items/create', ItemsCreate::class)->name('items.create');
-    Route::get('/items/{item}', ItemsShow::class)->name('items.show');
-    Route::get('/items/{item}/edit', ItemsEdit::class)->name('items.edit');
+    Route::get('/items', ItemsIndex::class)->name('items.index');           // Übersicht
+    Route::get('/items/create', ItemsCreate::class)->name('items.create');  // Erstellen
+    Route::get('/items/{item}', ItemsShow::class)->name('items.show');      // Details
+    Route::get('/items/{item}/edit', ItemsEdit::class)->name('items.edit'); // Bearbeiten
 
     // --------------------------------
     // 🚚 Warenbewegungen (MOVEMENTS)
     // --------------------------------
     Route::prefix('movements')->group(function () {
+
         // Wareneingänge (Lieferungen ins Hauptlager)
         Route::get('/inbound', MovementsInbound::class)->name('movements.inbound');
 
@@ -73,4 +74,4 @@ Route::middleware(['auth'])->group(function () {
 // --------------------------------
 // 🔐 Authentifizierung (Breeze)
 // --------------------------------
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
