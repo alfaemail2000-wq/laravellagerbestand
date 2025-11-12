@@ -69,33 +69,36 @@ class Movement extends Model
         });
 
         // --- Notifications nach Erstellung ---
+
         static::created(function (Movement $movement) {
             $item = $movement->item;
 
-            // Low-Stock prüfen
+            // --- 1. Low Stock prüfen ---
             if ($item->min_stock && $item->totalStock() < $item->min_stock) {
                 \Illuminate\Support\Facades\Notification::route('mail', env('LOW_STOCK_MAIL_TO'))
                     ->notify(new \App\Notifications\LowStockNotification($item));
             }
 
-            // Target-Stock für Fertigprodukt prüfen
+            // --- 2. Zielbestand prüfen nur für MD-001 ---
             if ($item->sku === 'MD-001') {
-                $target = (int)($item->target_stock ?? env('TARGET_STOCK', 0));
+                $target = (int) ($item->target_stock ?? env('TARGET_STOCK', 20));
                 $total  = $item->totalStock();
 
                 if ($total >= $target && !cache("target_notified_{$item->id}")) {
+                    // Mail senden
                     \Illuminate\Support\Facades\Notification::route('mail', env('TARGET_STOCK_MAIL_TO'))
                         ->notify(new \App\Notifications\TargetStockReachedNotification($item));
 
-                    // Zwischenspeichern, um Mail nicht mehrfach zu senden
+                    // Mail nur einmal alle 12 Stunden oder bis Bestand wieder sinkt
                     cache(["target_notified_{$item->id}" => true], now()->addHours(12));
                 }
 
-                // Reset, wenn Bestand wieder unter Ziel fällt
+                // Reset: Wenn Bestand unter Ziel fällt, kann nächste Mail wieder gesendet werden
                 if ($total < $target) {
                     cache()->forget("target_notified_{$item->id}");
                 }
             }
         });
+
     }
 }
