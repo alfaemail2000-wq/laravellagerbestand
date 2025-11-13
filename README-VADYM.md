@@ -59,6 +59,6 @@ Alle wichtigen Bereiche sind über die Navigation oder direkt per Route erreichb
 - `/movements/production` – Produktion
 
 
-Das Projekt ist versioniert und auf GitHub unter folgendem Link verfügbar:
+Das Projekt ist versioniert und auf GitHub als Arbeitsnachweiss bzw. Portfolio unter folgendem Link verfügbar:
 https://github.com/alfaemail2000-wq/laravellagerbestand.git“
 
