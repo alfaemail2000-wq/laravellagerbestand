@@ -12,29 +12,37 @@ class Index extends Component
 
     public $search = '';
 
-    // Listen for deleteConfirmed event from the browser
+    // Damit beim Ändern der Suche die Seite auf 1 zurückspringt
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
     protected $listeners = ['deleteConfirmed' => 'delete'];
 
     public function getItemsProperty()
     {
+        $search = trim($this->search);
+
         return Item::query()
-            ->where('sku', 'like', "%{$this->search}%")
-            ->orWhere('name', 'like', "%{$this->search}%")
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('sku', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('name')
             ->paginate(10);
     }
 
     public function confirmDelete($id)
     {
-        // 🔥 Simple Livewire v3 event dispatch (no toBrowser needed)
         $this->dispatch('confirm-delete', id: $id);
     }
 
     public function delete($id)
     {
-        $item = Item::find($id);
-
-        if ($item) {
+        if ($item = Item::find($id)) {
             $item->delete();
             session()->flash('success', '🗑️ Artikel wurde gelöscht.');
         }

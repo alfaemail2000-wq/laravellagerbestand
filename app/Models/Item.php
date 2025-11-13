@@ -48,6 +48,19 @@ class Item extends Model
         return (int) ($in - $out);
     }
 
+    /** Bestand pro Location (z. B. Hauptlager, Produktion, etc.) */
+    public function stockByLocation(): array
+    {
+        $locations = \App\Models\Location::all();
+        $result = [];
+
+        foreach ($locations as $loc) {
+            $result[$loc->name] = $this->stockFor($loc);
+        }
+
+        return $result;
+    }
+
     public function isLow(): bool
     {
         return $this->totalStock() < (int) $this->min_stock;
