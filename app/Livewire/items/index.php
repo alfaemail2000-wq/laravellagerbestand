@@ -5,6 +5,7 @@ namespace App\Livewire\Items;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Item;
+use Illuminate\Support\Facades\Response;
 
 class Index extends Component
 {
@@ -12,25 +13,14 @@ class Index extends Component
 
     public $search = '';
 
-    // Damit beim Ändern der Suche die Seite auf 1 zurückspringt
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
-
     protected $listeners = ['deleteConfirmed' => 'delete'];
 
     public function getItemsProperty()
     {
-        $search = trim($this->search);
-
         return Item::query()
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('sku', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%");
-                });
-            })
+            ->where(fn($q) => $q
+                ->where('sku', 'like', "%{$this->search}%")
+                ->orWhere('name', 'like', "%{$this->search}%"))
             ->orderBy('name')
             ->paginate(10);
     }
@@ -46,6 +36,56 @@ class Index extends Component
             $item->delete();
             session()->flash('success', '🗑️ Artikel wurde gelöscht.');
         }
+    }
+
+    /** 🧾 CSV-Export der Bestände */
+    public function exportCsv()
+    {
+        $filename = 'bestand_' . now()->format('Y-m-d_H-i-s') . '.csv';
+
+        $items = Item::with('movements')->get();
+
+        $rows = [];
+        foreach ($items as $item) {
+            $total = $item->totalStock();
+            $stocks = $item->stockByLocation();
+
+            if (empty($stocks)) {
+                $rows[] = [
+                    $item->sku,
+                    $item->name,
+                    '-',
+                    0,
+                    $total,
+                ];
+            } else {
+                foreach ($stocks as $location => $qty) {
+                    $rows[] = [
+                        $item->sku,
+                        $item->name,
+                        $location,
+                        $qty,
+                        $total,
+                    ];
+                }
+            }
+        }
+
+        // CSV erzeugen
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['SKU', 'Name', 'Location', 'Bestand', 'Gesamt']);
+        foreach ($rows as $row) {
+            fputcsv($handle, $row);
+        }
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return Response::streamDownload(function() use ($csv) {
+            echo $csv;
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     public function render()

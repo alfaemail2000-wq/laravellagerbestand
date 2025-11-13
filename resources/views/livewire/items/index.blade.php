@@ -1,20 +1,28 @@
 <div class="p-6">
     <div class="flex justify-between mb-4">
- 🔍 Suchfeld
-
+        {{-- 🔍 Suche --}}
         <input type="text"
-               wire:model.live="search"="search"
+               wire:model.live="search"
                placeholder="Suche nach SKU oder Name..."
                class="border p-2 rounded w-1/3">
 
- ➕ Neuer Artikel
+        <div class="space-x-2">
+            {{-- 🧾 CSV Export --}}
+            <button wire:click="exportCsv"
+                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                📄 CSV exportieren
+            </button>
 
-        <a href="{{ route('items.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded">
-            + Neuer Artikel
-        </a>
+            {{-- ➕ Neuer Artikel --}}
+            <a href="{{ route('items.create') }}"
+               class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                + Neuer Artikel
+            </a>
+        </div>
     </div>
 
- ✅ Erfolgsmeldung
+
+    ✅ Erfolgsmeldung
 
     @if (session('success'))
         <div class="mb-3 rounded bg-green-100 p-3 text-green-800">
