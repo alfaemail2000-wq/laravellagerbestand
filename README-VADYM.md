@@ -62,3 +62,7 @@ Alle wichtigen Bereiche sind über die Navigation oder direkt per Route erreichb
 Das Projekt ist versioniert und auf GitHub als Arbeitsnachweiss bzw. Portfolio unter folgendem Link verfügbar:
 https://github.com/alfaemail2000-wq/laravellagerbestand.git“
 
+
+
+composer require blade-ui-kit/blade-heroicons
+
