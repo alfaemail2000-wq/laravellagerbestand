@@ -1,4 +1,30 @@
 <div class="p-6">
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a href="{{ route('items.index') }}"
+           class="px-4 py-2 rounded {{ request()->routeIs('items.index') ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+            📦 Artikelübersicht
+        </a>
+
+        <a href="{{ route('movements.inbound') }}"
+           class="px-4 py-2 rounded {{ request()->routeIs('movements.inbound') ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+            ⬅️ Wareneingang
+        </a>
+
+        <a href="{{ route('movements.outbound') }}"
+           class="px-4 py-2 rounded {{ request()->routeIs('movements.outbound') ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+            ➡️ Warenausgang
+        </a>
+
+        <a href="{{ route('movements.transfer') }}"
+           class="px-4 py-2 rounded {{ request()->routeIs('movements.transfer') ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+            🔁 Transfer
+        </a>
+
+        <a href="{{ route('movements.production') }}"
+           class="px-4 py-2 rounded {{ request()->routeIs('movements.production') ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+            🏭 Produktion
+        </a>
+    </div>
     <div class="flex justify-between mb-4">
         {{-- 🔍 Suche --}}
         <input type="text"
