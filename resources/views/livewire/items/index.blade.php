@@ -82,4 +82,7 @@
 <script>
     window.addEventListener('confirm-delete', event => {
         if (confirm('❗ Möchtest du diesen Artikel wirklich löschen?')) {
-            Livewire.dispatch('deleteCo
+            Livewire.dispatch('deleteConfirmed', { id: event.detail.id });
+        }
+    });
+</script>
