@@ -99,6 +99,15 @@
                     <td class="p-2">{{ $item->name }}</td>
                     <td class="p-2 font-semibold text-blue-700">
                         {{ $hauptlagerBestand[$item->id] ?? 0 }}
+
+                        {{-- 🔽 Movement-Typen unter dem Bestand --}}
+                        @if(isset($hauptlagerBewegungen[$item->id]))
+                            <div class="text-xs text-gray-600 mt-1">
+                                @foreach($hauptlagerBewegungen[$item->id] as $bewegung)
+                                    • {{ ucfirst($bewegung->type) }} ({{ $bewegung->quantity }})<br>
+                                @endforeach
+                            </div>
+                        @endif
                     </td>
                 </tr>
             @endforeach

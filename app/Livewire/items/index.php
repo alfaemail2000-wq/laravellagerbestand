@@ -15,6 +15,7 @@ class Index extends Component
 
     protected $listeners = ['deleteConfirmed' => 'delete'];
 
+    // Dynamische Property für Items mit Suche & Pagination
     public function getItemsProperty()
     {
         return Item::query()
@@ -25,11 +26,13 @@ class Index extends Component
             ->paginate(10);
     }
 
+    // Lösch-Bestätigung
     public function confirmDelete($id)
     {
         $this->dispatch('confirm-delete', id: $id);
     }
 
+    // Löschen
     public function delete($id)
     {
         if ($item = Item::find($id)) {
@@ -38,14 +41,13 @@ class Index extends Component
         }
     }
 
-    /** 🧾 CSV-Export der Bestände */
+    /** 🧾 CSV-Export der Bestände – Deutsch/Excel kompatibel */
     public function exportCsv()
     {
         $filename = 'bestand_' . now()->format('Y-m-d_H-i-s') . '.csv';
-
         $items = Item::with('movements')->get();
-
         $rows = [];
+
         foreach ($items as $item) {
             $total = $item->totalStock();
             $stocks = $item->stockByLocation();
@@ -71,12 +73,15 @@ class Index extends Component
             }
         }
 
-        // CSV erzeugen
+        // CSV erzeugen mit BOM + Semikolon
         $handle = fopen('php://temp', 'r+');
-        fputcsv($handle, ['SKU', 'Name', 'Location', 'Bestand', 'Gesamt']);
+        fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM für Excel
+        fputcsv($handle, ['SKU', 'Name', 'Location', 'Bestand', 'Gesamt'], ';');
+
         foreach ($rows as $row) {
-            fputcsv($handle, $row);
+            fputcsv($handle, $row, ';');
         }
+
         rewind($handle);
         $csv = stream_get_contents($handle);
         fclose($handle);
@@ -84,10 +89,11 @@ class Index extends Component
         return Response::streamDownload(function() use ($csv) {
             echo $csv;
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
+    // 🔹 Render-Methode – muss unbedingt vorhanden sein!
     public function render()
     {
         return view('livewire.items.index', [

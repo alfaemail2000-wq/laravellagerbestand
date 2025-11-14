@@ -73,12 +73,20 @@ class Inbound extends Component
             foreach ($items as $item) {
                 $hauptlagerBestand[$item->id] = $item->stockFor($hauptlager);
             }
+
+            // 🔥 Alle Bewegungen pro Artikel fürs Hauptlager laden
+            $hauptlagerBewegungen = Movement::where('to_location_id', $hauptlager->id)
+                ->with('item')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->groupBy('item_id');
         }
 
         return view('livewire.movements.inbound', [
             'movements' => $movements,
             'items' => $items,
             'hauptlagerBestand' => $hauptlagerBestand,
+            'hauptlagerBewegungen' => $hauptlagerBewegungen,
         ]);
     }
 }
